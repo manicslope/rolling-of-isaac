@@ -6,12 +6,11 @@ Only tryed on Rebirth, Windows
 [!]Works only on Isaac, every other character either too slow or too fast, but they able to take item on lower treasure room
 
 ToDo list:
-    Change upper treasure room image
     Add every character as object of class with different parameters
 """
 
 delay = 3
-item_list = ("Mom's Knife", "Death's Touch", "Magic Mushroom", "Cricket's Head", "Polyphemus", "Proptosis")
+item_list = ("Mom's Knife", "Death's Touch", "Magic Mushroom", "Cricket's Head", "Polyphemus", "Proptosis", "20/20")
 
 def restart_run():
     pyautogui.keyDown('r')
@@ -105,9 +104,13 @@ def main():
     while finding_good_run:
         while finding_treasure_room:
             restart_run()
+            # time.sleep(3.5)  # Waiting for floor's name to dissapear
+            time.sleep(.5)  # Waiting for animation
+            print("finding room")
             direction = is_treasure_room()
             if direction:
                 print(direction)
+                # time.sleep(.5)
                 go(direction)
                 finding_treasure_room = False
         time.sleep(1.3)
