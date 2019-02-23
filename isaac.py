@@ -10,7 +10,14 @@ ToDo list:
 """
 
 delay = 3
-item_list = ("Mom's Knife", "Death's Touch", "Magic Mushroom", "Cricket's Head", "Polyphemus", "Proptosis", "20/20")
+character = "Azazel"
+item_list = ["Mom's Knife", "Magic Mushroom", "Cricket's Head", "Proptosis", "20/20"]
+if character == "Isaac":
+    item_list.append("Polyphemus")
+    item_list.append("Death's Touch")
+elif character == "Azazel":
+    item_list.append("The Ludovico Technique")
+    item_list.append("Tiny Planet")
 
 def restart_run():
     pyautogui.keyDown('r')
@@ -29,8 +36,12 @@ def is_treasure_room():
             pass
     return False
 
-def go(direction):
-    params = {"up": ["w", 1], "down": ["s", .5], "side": ["w", .35], "left": ["a", 1], "right": ["d", 1]}
+def go(character, direction):
+    # params = {"up": ["w", 1], "down": ["s", .5], "side": ["w", .35], "left": ["a", 1], "right": ["d", 1]}
+    correction = 0
+    if character == "Azazel":
+        correction = -0.2
+
     if direction == "down":
         pyautogui.keyDown("s")
         time.sleep(1.5)
@@ -51,7 +62,8 @@ def go(direction):
             time.sleep(.2)
             pyautogui.keyUp("s")
             pyautogui.keyDown("a")
-            time.sleep(.8)
+            time.sleep(.8+correction)
+            # time.sleep(.6)
             pyautogui.keyUp("a")
             pyautogui.keyDown("w")
             time.sleep(.4)
@@ -64,23 +76,19 @@ def go(direction):
             time.sleep(.2)
             pyautogui.keyUp("s")
             pyautogui.keyDown("d")
-            time.sleep(.8)
+            time.sleep(.8+correction)
+            # time.sleep(.6)
             pyautogui.keyUp("d")
             pyautogui.keyDown("w")
             time.sleep(.4)
             pyautogui.keyUp("w")
-    # if direction in ["up", "down"]:
-    #     pyautogui.keyDown(params[direction][0])
-    #     time.sleep(params[direction][1])
-    #     pyautogui.keyUp(params[direction][0])
-    # else:
-    #     pyautogui.keyDown(params["side"][0])
-    #     time.sleep(params["side"][1])
-    #     pyautogui.keyUp(params["side"][0])
-    #
-    #     pyautogui.keyDown(params[direction][0])
-    #     time.sleep(pasrams[direction][1])
-    #     pyautogui.keyUp(params[direction][0])
+
+"""
+Down - good 3/3
+Up - good 2/2
+"""
+# time.sleep(delay)
+# go("Azazel", "right")
 
 def is_items():
     """
@@ -111,12 +119,12 @@ def main():
             if direction:
                 print(direction)
                 # time.sleep(.5)
-                go(direction)
+                go(character, direction)
                 finding_treasure_room = False
         time.sleep(1.3)
         current_items = is_items()
         print(current_items)
-        if current_items.intersection(item_list):
+        if current_items.intersection(set(item_list)):
             finding_good_run = False
         else:
             finding_treasure_room = True
