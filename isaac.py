@@ -1,4 +1,5 @@
-import pyautogui, time, sys
+import pyautogui, time, os
+from win32gui import GetWindowText, GetForegroundWindow
 
 """
 Only tryed on Rebirth, Windows
@@ -9,9 +10,11 @@ ToDo list:
     Add every character as object of class with different parameters
 """
 
-delay = 3
+delay = 5
 character = "Azazel"
-item_list = ["Mom's Knife", "Magic Mushroom", "Cricket's Head", "Proptosis", "20/20"]
+item_list = ["Mom's Knife", "Magic Mushroom", "Cricket's Head", "Proptosis", "20/20", "Tech X", "Epic Fetus"]
+# item_list = ["Tech X"]  # OP for Afterbirth
+
 if character == "Isaac":
     item_list.append("Polyphemus")
     item_list.append("Death's Touch")
@@ -36,139 +39,126 @@ def is_treasure_room():
             pass
     return False
 
-def go(character, direction):
-    # params = {"up": ["w", 1], "down": ["s", .5], "side": ["w", .35], "left": ["a", 1], "right": ["d", 1]}
+def go(direction):
     correction = 0
-    if character == "Azazel":
-        correction = -0.2
+    # if character == "Azazel":
+    #     correction = -0.2
+    params = {  "up": {"key": "w", "to": 1.2, "in": .8}, \
+                "down": {"key": "s", "to": .2, "in": .8}, \
+                "center": {"key": "w", "to": .3}, \
+                "left": {"key": "a", "to": 1.4, "in": .8}, \
+                "right": {"key": "d", "to": 1.4, "in": .8}, \
+                "evade": {"key": "s", "in": .2}, \
+                "take_item": {"key": "w", "in": .2}}
 
-    if direction == "down":
-        pyautogui.keyDown("s")
-        time.sleep(1.5)
-        pyautogui.keyUp("s")
-    elif direction == "up":
-        pyautogui.keyDown("w")
-        time.sleep(2.3)
-        pyautogui.keyUp("w")
+    # Going to the room
+    if direction in ["left", "right"]:
+        pyautogui.keyDown(params["center"]["key"])
+        time.sleep(params["center"]["to"])
+        pyautogui.keyUp(params["center"]["key"])
+    pyautogui.keyDown(params[direction]["key"])
+    time.sleep(params[direction]["to"])
+    pyautogui.keyUp(params[direction]["key"])
+
+    # Going in the room
+    time.sleep(.3)
+    room_type = get_from_log()["room_type"]
+    if room_type == "4.12":
+        return None
+    print("Room Type: %s" % room_type)
+    if direction in ["up", "down"]:
+        pyautogui.keyDown(params[direction]["key"])
+        time.sleep(params[direction]["in"])
+        pyautogui.keyUp(params[direction]["key"])
+        if direction == "down":
+            if room_type in ["4.11", "4.27"]:
+                pyautogui.keyDown("d")
+                time.sleep(.1)
+                pyautogui.keyUp("d")
+
+                pyautogui.keyDown("w")
+                time.sleep(.4)
+                pyautogui.keyUp("w")
+
+                # Maybe go to the left (for 4.11(two items close to each other)), but need to correct upper command
+            elif room_type == "4.16":
+                return None
     else:
-        pyautogui.keyDown("w")
-        time.sleep(.35)
-        pyautogui.keyUp("w")
-        if direction == "left":
-            pyautogui.keyDown("a")
-            time.sleep(1.4)
-            pyautogui.keyUp("a")
-            pyautogui.keyDown("s")
-            time.sleep(.2)
-            pyautogui.keyUp("s")
-            pyautogui.keyDown("a")
-            time.sleep(.8+correction)
-            # time.sleep(.6)
-            pyautogui.keyUp("a")
-            pyautogui.keyDown("w")
-            time.sleep(.4)
-            pyautogui.keyUp("w")
-        elif direction == "right":
-            pyautogui.keyDown("d")
-            time.sleep(1.4)
-            pyautogui.keyUp("d")
-            pyautogui.keyDown("s")
-            time.sleep(.2)
-            pyautogui.keyUp("s")
-            pyautogui.keyDown("d")
-            time.sleep(.8+correction)
-            # time.sleep(.6)
-            pyautogui.keyUp("d")
-            pyautogui.keyDown("w")
-            time.sleep(.4)
-            pyautogui.keyUp("w")
+        if room_type != "4.26":
+            pyautogui.keyDown(params["evade"]["key"])
+            time.sleep(params["evade"]["in"])
+            pyautogui.keyUp(params["evade"]["key"])
 
-"""
-Down - good 3/3
-Up - good 2/2
-"""
-# time.sleep(delay)
-# go("Azazel", "right")
+        pyautogui.keyDown(params[direction]["key"])
+        time.sleep(params[direction]["in"])
+        pyautogui.keyUp(params[direction]["key"])
 
-def is_items():
+        pyautogui.keyDown(params["take_item"]["key"])
+        time.sleep(params["take_item"]["in"])
+        pyautogui.keyUp(params["take_item"]["key"])
+
+        # For 4.27
+        pyautogui.keyDown("d")
+        time.sleep(.1)
+        pyautogui.keyUp("d")
+
+def get_from_log():
     """
     Returns list of items for current run
     """
-    log_file = open(u"C:\\Users\\Slope\\Documents\\My Games\\Binding of Isaac Rebirth/log.txt", "r")
-    lines = list()
+    log_file = open(u"C:\\Users\\Slope\\Documents\\My Games\\Binding of Isaac Afterbirth/log.txt", "r")
+    items = list()
+    room_type = str()
     for line in log_file.readlines():
         if "RNG Start Seed" in line:
-            lines = list()
-        if line not in lines and "Adding collectible" in line:
-            lines.append(line.split("(")[1].split(")")[0])
+            items = list()
+        elif "Room" in line:
+            room_type = line.split()[1].split("(")[0]
+        elif line not in items and "Adding collectible" in line:
+            items.append(line.split("(")[1].split(")")[0])
             # print(line)
     log_file.close()
-    return set(lines)
+    return {"items": set(items), "room_type": room_type}
 
 def main():
+    os.system('mode con: lines=25')
+
     time.sleep(delay)
+    app_name = "Binding of Isaac: Afterbirth"
+    if GetWindowText(GetForegroundWindow()) != app_name:
+        print("Switch to Isaac")
     finding_treasure_room = True
     finding_good_run = True
+    number_of_runs = 1
     while finding_good_run:
         while finding_treasure_room:
             restart_run()
             # time.sleep(3.5)  # Waiting for floor's name to dissapear
-            time.sleep(.5)  # Waiting for animation
-            print("finding room")
+            time.sleep(1)  # Waiting for animation
+            print("[Run #%s] Finding room" % number_of_runs)
             direction = is_treasure_room()
             if direction:
-                print(direction)
+                print("Found. Going %s" % direction)
                 # time.sleep(.5)
-                go(character, direction)
+                go(direction)
                 finding_treasure_room = False
+            else:
+                print("Nope\n")
+                number_of_runs += 1
         time.sleep(1.3)
-        current_items = is_items()
-        print(current_items)
+        current_items = get_from_log()["items"]
+        print("%s\n" % current_items)
         if current_items.intersection(set(item_list)):
             finding_good_run = False
         else:
             finding_treasure_room = True
+        number_of_runs += 1
+
     pyautogui.keyDown('esc')
 
 main()
-
-# def main():
-#     time.sleep(delay)
-#     while True:
-#         direction = is_treasure_room()
-#         if direction:  # If there is a treasure room
-#             go(direction)  # Go to the treasure room
-#             if is_item():  # Checking for items
-#                 pyautogui.keyDown('esc')
-#                 exit()
-#         else:
-#             restart_run()
-        # while not is_treasure_room():
-        #     restart_run()
-        # direction = is_treasure_room()
-        # go(direction)
-        # time.sleep(1)
-        # if is_item():r
-        #     pyautogui.keyDown('esc')
-        #     exit()
-        # else:
-        #     restart_run()
-
-
+# time.sleep(2)
 # go("left")
-# go("right")
-# if is_item():
-#     print("good")
-#     pyautogui.keyDown('esc')
-# time.sleep(delay)
-# item = pyautogui.locateOnScreen("Mom's Knife.png", confidence=.8)
-# x, y = pyautogui.center(item)
-# pyautogui.moveTo(x, y)
-# go("down")
-# print(is_treasure_room())
-# time.sleep(delay)
-# go("left")
-# main()
 
 # if __name__ == "__main__":
 #     main()
