@@ -1,7 +1,5 @@
 import pyautogui, time, os
 
-delay = 3
-item_list = ["Mom's Knife", "Magic Mushroom", "Cricket's Head", "Proptosis", "20/20", "Tech X", "Epic Fetus", "Polyphemus", "Death's Touch"]
 
 def restart_run():
     pyautogui.keyDown('r')
@@ -25,7 +23,13 @@ def get_from_log():
     items = list()
     # room_type = str()
     for line in log_file.readlines():
-        if "RNG Start Seed" in line:
+        if "Initialized player" in line:
+            character = line.split("Subtype ")[1].split()[0]
+            if character == "0":
+                character = "Isaac"
+            elif character == "7":
+                character = "Azazel"
+        elif "RNG Start Seed" in line:
             items = list()
             # seed = line.split(": ")[1].split(" (")[0]
         elif "Room" in line and "." in line:
@@ -33,7 +37,7 @@ def get_from_log():
         elif line not in items and "Adding collectible" in line:
             items.append(line.split("(")[1].split(")")[0])
     log_file.close()
-    return {"items": set(items), "room_type": room_type}
+    return {"character": character, "items": set(items), "room_type": room_type}
 
 
 def reach_room(direction):
@@ -51,8 +55,10 @@ def reach_room(direction):
         pyautogui.keyUp(params[direction])
 
     # In the room
+    # time.sleep(1)
     info = get_from_log()
     current_items = info["items"]
+    character = info["character"]
     print("Room Type: %s" % info["room_type"])
     """
     Room types
@@ -70,70 +76,117 @@ def reach_room(direction):
     [~]4.27 right, maybe evade
     4.33 four enemies, damage
     4.35, 4.36(1.5 hearts) two enemies, damage
+    4.38 two items, a small strafe to the right
     """
-    if  direction in ["left", "right"] and\
-        info["room_type"] in ["4.2", "4.3", "4.5", "4.4", "4.7", "4.9"] or\
-        direction == "right" and info["room_type"] == "4.27":
-        pyautogui.keyDown("s")
-        time.sleep(.3)  # Depends on a character
-        pyautogui.keyUp("s")
+    if info["room_type"] in ["4.15", "4.33", "4.35", "4.36"]:
+        return
+    if character == "Isaac":
+        if  direction in ["left", "right"] and\
+            info["room_type"] in ["4.2", "4.3", "4.5", "4.4", "4.7", "4.9"] or\
+            direction == "right" and info["room_type"] == "4.27":
+            pyautogui.keyDown("s")
+            time.sleep(.3)  # Depends on a character
+            pyautogui.keyUp("s")
 
-        pyautogui.keyDown(params[direction])
-        time.sleep(.85)  # Depends on a character
-        pyautogui.keyUp(params[direction])
-
-        pyautogui.keyDown("w")
-        time.sleep(.3)  # Depends on a character
-        pyautogui.keyUp("w")
-
-        while current_items == get_from_log()["items"]:
             pyautogui.keyDown(params[direction])
-        pyautogui.keyUp(params[direction])
-        return
-    elif info["room_type"] in ["4.12", "4.15", "4.33", "4.35", "4.36"]:
-        return
-    # elif info["room_type"] == "4.15":
-    #     pyautogui.keyDown(direction)  # Suppressing fire!!!
-        # time.sleep(.3)
-    elif    direction in ["left", "right"] and\
-            info["room_type"] in ["4.1", "4.16"]:
-        pyautogui.keyDown("s")
-        time.sleep(.5)  # Depends on a character
-        pyautogui.keyUp("s")
+            time.sleep(.85)  # Depends on a character
+            pyautogui.keyUp(params[direction])
 
-        pyautogui.keyDown(params[direction])
-        time.sleep(.85)  # Depends on a character
-        pyautogui.keyUp(params[direction])
-        while current_items == get_from_log()["items"]:
             pyautogui.keyDown("w")
-        pyautogui.keyUp("w")
-        return
-    # elif direction in ["up", "down"] and info["room_type"] == "4.21":
-    elif direction in ["left", "right"] and info["room_type"] == "4.26":
-        pyautogui.keyDown("w")
-        time.sleep(.1)  # Depends on a character
-        pyautogui.keyUp("w")
-    elif    direction in ["up", "down"] and\
-            info["room_type"] in ["4.21", "4.27"]:
-        strafe = .2
-        if info["room_type"] == "4.21":
-            strafe = .5
-        pyautogui.keyDown("d")
-        time.sleep(strafe)  # Depends on a character
-        pyautogui.keyUp("d")
-        while current_items == get_from_log()["items"]:
+            time.sleep(.3)  # Depends on a character
+            pyautogui.keyUp("w")
+
+            while current_items == get_from_log()["items"]:
+                pyautogui.keyDown(params[direction])
+            pyautogui.keyUp(params[direction])
+            return
+        elif info["room_type"] == "4.12":
+            return
+        # elif info["room_type"] == "4.15":
+        #     pyautogui.keyDown(direction)  # Suppressing fire!!!
+            # time.sleep(.3)
+        elif    direction in ["left", "right"] and\
+                info["room_type"] in ["4.1", "4.16"]:
+            pyautogui.keyDown("s")
+            time.sleep(.5)  # Depends on a character
+            pyautogui.keyUp("s")
+
             pyautogui.keyDown(params[direction])
-        pyautogui.keyUp(params[direction])
-        return
-    # For most rooms(if it doesn't have obstacles)
+            time.sleep(.85)  # Depends on a character
+            pyautogui.keyUp(params[direction])
+            while current_items == get_from_log()["items"]:
+                pyautogui.keyDown("w")
+            pyautogui.keyUp("w")
+            return
+        # elif direction in ["up", "down"] and info["room_type"] == "4.21":
+        elif direction in ["left", "right"] and info["room_type"] == "4.26":
+            pyautogui.keyDown("w")
+            time.sleep(.1)  # Depends on a character
+            pyautogui.keyUp("w")
+        elif    direction in ["up", "down"] and\
+                info["room_type"] in ["4.21", "4.27"]:
+            strafe = .2
+            if info["room_type"] == "4.21":
+                strafe = .5
+            pyautogui.keyDown("d")
+            time.sleep(strafe)  # Depends on a character
+            pyautogui.keyUp("d")
+            while current_items == get_from_log()["items"]:
+                pyautogui.keyDown(params[direction])
+            pyautogui.keyUp(params[direction])
+            return
+        # For most rooms(if it doesn't have obstacles)
+    elif character == "Azazel":
+        if direction in ["left", "right"] and\
+            info["room_type"] in ["4.2", "4.3"]:
+            pyautogui.keyDown("s")
+            time.sleep(.3)  # Depends on a character
+            pyautogui.keyUp("s")
+
+            pyautogui.keyDown(params[direction])
+            time.sleep(.6)  # Depends on a character
+            pyautogui.keyUp(params[direction])
+
+            pyautogui.keyDown("w")
+            time.sleep(.3)  # Depends on a character
+            pyautogui.keyUp("w")
+
+            while current_items == get_from_log()["items"]:
+                pyautogui.keyDown(params[direction])
+            pyautogui.keyUp(params[direction])
+            return
+        elif direction in ["left", "right"] and info["room_type"] == "4.26":
+            pyautogui.keyDown("w")
+            time.sleep(.1)  # Depends on a character
+            pyautogui.keyUp("w")
+        elif    direction in ["up", "down"] and\
+                info["room_type"] in ["4.21", "4.27"]:
+            strafe = .2
+            if info["room_type"] == "4.21":
+                strafe = .5
+            pyautogui.keyDown("d")
+            time.sleep(strafe)  # Depends on a character
+            pyautogui.keyUp("d")
+            while current_items == get_from_log()["items"]:
+                pyautogui.keyDown(params[direction])
+            pyautogui.keyUp(params[direction])
+            return
     while current_items == get_from_log()["items"]:
         pyautogui.keyDown(params[direction])
     pyautogui.keyUp(params[direction])
 
 
+delay = 3
+item_list = ["Mom's Knife", "Magic Mushroom", "Cricket's Head", "Proptosis", "20/20", "Tech X", "Epic Fetus"]
+items = {   "Isaac": ["Polyphemus", "Death's Touch"],\
+            "Azazel": ["The Ludovico Technique", "Tiny Planet"]}
+character = get_from_log()["character"]
+item_list += items[character]
+
 
 def main():
     os.system('mode con: lines=20')
+    print("Character: %s\n" % character)
     number_of_runs = 1
     time.sleep(delay)
     while True:
@@ -155,5 +208,5 @@ def main():
 
 main()
 # time.sleep(delay)
-# reach_room("up")
+# reach_room("left")
 # print(room_direction())
