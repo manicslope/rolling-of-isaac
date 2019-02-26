@@ -31,16 +31,27 @@ def get_from_log():
                 character = "Azazel"
         elif "RNG Start Seed" in line:
             items = list()
+            curse = False
             # seed = line.split(": ")[1].split(" (")[0]
+        elif "Curse of Maze" in line:
+            curse = True
         elif "Room" in line and "." in line:
             room_type = line.split("Room ")[1].split("(")[0]
         elif line not in items and "Adding collectible" in line:
             items.append(line.split("(")[1].split(")")[0])
     log_file.close()
-    return {"character": character, "items": set(items), "room_type": room_type}
+    return {"character": character, "items": set(items),\
+            "room_type": room_type, "curse": curse}
 
 
 def reach_room(direction):
+    """
+    Possible teleport to another room
+    """
+
+    if get_from_log()["curse"]:
+        print("Curse")
+        return
     params = {"up": "w", "down": "s", "left": "a", "right": "d"}
     if direction in ["up", "down"]:
         while get_from_log()["room_type"].split(".")[0] != "4":
@@ -55,7 +66,7 @@ def reach_room(direction):
         pyautogui.keyUp(params[direction])
 
     # In the room
-    # time.sleep(1)
+    # time.sleep(.5)
     info = get_from_log()
     current_items = info["items"]
     character = info["character"]
@@ -79,6 +90,18 @@ def reach_room(direction):
     4.38 two items, a small strafe to the right
     """
     if info["room_type"] in ["4.15", "4.33", "4.35", "4.36"]:
+        return
+    elif    direction in ["up", "down"] and\
+            info["room_type"] in ["4.21", "4.27", "4.38"]:
+        strafe = .2
+        if info["room_type"] == "4.21":
+            strafe = .5
+        pyautogui.keyDown("d")
+        time.sleep(strafe)  # Depends on a character
+        pyautogui.keyUp("d")
+        while current_items == get_from_log()["items"]:
+            pyautogui.keyDown(params[direction])
+        pyautogui.keyUp(params[direction])
         return
     if character == "Isaac":
         if  direction in ["left", "right"] and\
@@ -123,37 +146,26 @@ def reach_room(direction):
             pyautogui.keyDown("w")
             time.sleep(.1)  # Depends on a character
             pyautogui.keyUp("w")
-        elif    direction in ["up", "down"] and\
-                info["room_type"] in ["4.21", "4.27"]:
-            strafe = .2
-            if info["room_type"] == "4.21":
-                strafe = .5
-            pyautogui.keyDown("d")
-            time.sleep(strafe)  # Depends on a character
-            pyautogui.keyUp("d")
-            while current_items == get_from_log()["items"]:
-                pyautogui.keyDown(params[direction])
-            pyautogui.keyUp(params[direction])
-            return
         # For most rooms(if it doesn't have obstacles)
     elif character == "Azazel":
         if direction in ["left", "right"] and\
-            info["room_type"] in ["4.2", "4.3"]:
+            info["room_type"] in ["4.2", "4.3"] or\
+            direction == "right" and info["room_type"] == "4.27":
             pyautogui.keyDown("s")
             time.sleep(.3)  # Depends on a character
             pyautogui.keyUp("s")
 
             pyautogui.keyDown(params[direction])
-            time.sleep(.6)  # Depends on a character
+            time.sleep(.7)  # Depends on a character
             pyautogui.keyUp(params[direction])
 
             pyautogui.keyDown("w")
             time.sleep(.3)  # Depends on a character
             pyautogui.keyUp("w")
-
-            while current_items == get_from_log()["items"]:
-                pyautogui.keyDown(params[direction])
-            pyautogui.keyUp(params[direction])
+            if info["room_type"] != "4.2":
+                while current_items == get_from_log()["items"]:
+                    pyautogui.keyDown(params[direction])
+                pyautogui.keyUp(params[direction])
             return
         elif direction in ["left", "right"] and info["room_type"] == "4.26":
             pyautogui.keyDown("w")
@@ -208,5 +220,5 @@ def main():
 
 main()
 # time.sleep(delay)
-# reach_room("left")
+# reach_room("up")
 # print(room_direction())
