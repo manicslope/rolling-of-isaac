@@ -35,7 +35,8 @@ def get_from_log():
             # seed = line.split(": ")[1].split(" (")[0]
         elif "Curse of Maze" in line:
             curse = True
-        elif "Room" in line and "." in line:
+        elif "Room " in line and "." in line:
+            # print(line)
             room_type = line.split("Room ")[1].split("(")[0]
         elif line not in items and "Adding collectible" in line:
             items.append(line.split("(")[1].split(")")[0])
@@ -83,6 +84,7 @@ def reach_room(direction):
     [~]4.15 four fires(half a heart of damage)
     [+]4.16 sides, have to evade
     [+]4.21 two items, left with spikes
+    4.25 two items on sides of machine in the center
     [~]4.26 up, sides, a little bit higher than center
     [~]4.27 right, maybe evade
     4.33 four enemies, damage
@@ -172,10 +174,12 @@ def reach_room(direction):
             time.sleep(.1)  # Depends on a character
             pyautogui.keyUp("w")
         elif    direction in ["up", "down"] and\
-                info["room_type"] in ["4.21", "4.27"]:
+                info["room_type"] in ["4.21", "4.25", "4.27"]:
             strafe = .2
             if info["room_type"] == "4.21":
                 strafe = .5
+            elif info["room_type"] == "4.25":
+                strafe = .7
             pyautogui.keyDown("d")
             time.sleep(strafe)  # Depends on a character
             pyautogui.keyUp("d")
@@ -220,5 +224,5 @@ def main():
 
 main()
 # time.sleep(delay)
-# reach_room("up")
+# reach_room("down")
 # print(room_direction())
